@@ -14,7 +14,8 @@ export default function ProductionLog() {
     const [productionLogs, setProductionLogs] = useState<ProductionLogInterface[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [remark, setRemark] = useState('');
-    const [qty, setQty] = useState(0);
+    // '' means the box is empty; a state stuck at 0 cannot be cleared
+    const [qty, setQty] = useState<number | ''>('');
     const [createdAt, setCreatedAt] = useState(new Date());
     const [productionLogId, setProductionLogId] = useState(0);
     const router = useRouter();
@@ -65,18 +66,23 @@ export default function ProductionLog() {
     const closeModal = () => {
         setShowModal(false);
         setCreatedAt(new Date());
-        setQty(0);
+        setQty('');
         setRemark('');
         setProductionLogId(0);
 
     }
 
     const handleSave = async () => {
+        if (qty === '' || qty <= 0) {
+            Swal.fire({ title: 'Invalid quantity', text: 'Quantity must be greater than 0.', icon: 'warning' });
+            return;
+        }
+
         const url = Config.apiUrl + '/production-logs';
 
         try {
             const payload = {
-                createdAt: createdAt.toISOString(),
+                productionDate: createdAt.toISOString(),
                 qty: qty,
                 remark: remark,
                 production: {
@@ -144,9 +150,10 @@ export default function ProductionLog() {
 
     const handleEdit = (productionLog: ProductionLogInterface) => {
         setShowModal(true);
-        setCreatedAt(new Date(productionLog.createdAt))
-        setQty(productionLog.qty);
-        setRemark(productionLog.remark);
+        const parsed = new Date(productionLog.productionDate);
+        setCreatedAt(isNaN(parsed.getTime()) ? new Date() : parsed);
+        setQty(productionLog.qty ?? 0);
+        setRemark(productionLog.remark ?? '');
         setProductionLogId(productionLog.id);
     }
 
@@ -173,18 +180,25 @@ export default function ProductionLog() {
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <th>Production Date</th>
                                 <th style={{ textAlign: 'right' }}>Quantity</th>
                                 <th>Remark</th>
+                                <th>Recorded</th>
                                 <th className="w-[120px]"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {productionLogs.map((productionLog) => (
                                 <tr key={productionLog.id}>
-                                    <td>{new Date(productionLog.createdAt).toLocaleDateString()}</td>
+                                    <td>{new Date(productionLog.productionDate).toLocaleDateString()}</td>
                                     <td className="text-right">{productionLog.qty}</td>
                                     <td>{productionLog.remark}</td>
+                                    {/* Server-stamped, so a back-dated entry still shows when it was keyed in */}
+                                    <td className="text-sm opacity-70">
+                                        {productionLog.recordedAt
+                                            ? new Date(productionLog.recordedAt).toLocaleString()
+                                            : '-'}
+                                    </td>
                                     <td className="flex gap-2 justify-center">
                                         <button onClick={() => handleEdit(productionLog)}
                                             className="table-edit-btn table-action-btn">
@@ -206,10 +220,17 @@ export default function ProductionLog() {
                     <div className="flex flex-col gap-3">
                         <div>
                             <label>Date</label>
+                            {/* Defaults to today but stays editable: a night shift is often
+                                keyed in the next morning, so back-dating has to be possible.
+                                max stops the opposite mistake - output cannot be recorded for
+                                a day that has not happened yet.
+                                Clearing the field yields "", and new Date("") is an Invalid
+                                Date whose toISOString() throws on the next render. */}
                             <input type="date"
                                 className="input-field"
-                                value={createdAt.toISOString().split('T')[0]}
-                                onChange={(e) => setCreatedAt(new Date(e.target.value))}
+                                max={new Date().toISOString().split('T')[0]}
+                                value={isNaN(createdAt.getTime()) ? '' : createdAt.toISOString().split('T')[0]}
+                                onChange={(e) => setCreatedAt(e.target.value ? new Date(e.target.value) : new Date())}
                             />
                         </div>
                         <div>
@@ -217,7 +238,7 @@ export default function ProductionLog() {
                             <input type="text"
                                 className="input-field"
                                 value={qty}
-                                onChange={(e) => setQty(Number(e.target.value))} />
+                                onChange={(e) => setQty(e.target.value === '' ? '' : Number(e.target.value))} />
                         </div>
                         <div>
                             <label>Remark</label>

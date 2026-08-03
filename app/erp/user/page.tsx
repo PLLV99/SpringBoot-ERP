@@ -163,8 +163,9 @@ export default function Page() {
     const handleEdit = (user: UserInterface) => {
         // Prepare data for editing
         setEditingUser(user);
-        setEmail(user.email);
-        setUsername(user.username);
+        // email is nullable in the database; null would make these inputs uncontrolled
+        setEmail(user.email ?? '');
+        setUsername(user.username ?? '');
         setPassword('');
         setShowModal(true); // Show modal for editing
         setRole(user.role ?? 'employee');

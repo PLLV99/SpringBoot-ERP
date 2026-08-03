@@ -16,7 +16,8 @@ export default function ProductionLoss() {
     const [productionLoss, setProductionLoss] = useState<ProductionLossInterface[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [remark, setRemark] = useState('');
-    const [qty, setQty] = useState(0);
+    // '' means the box is empty; a state stuck at 0 cannot be cleared
+    const [qty, setQty] = useState<number | ''>('');
     const [createdAt, setCreatedAt] = useState(new Date());
     const [productionLossId, setProductionLossId] = useState(0);
     const { id } = useParams();
@@ -66,17 +67,22 @@ export default function ProductionLoss() {
     const closeModal = () => {
         setShowModal(false);
         setCreatedAt(new Date());
-        setQty(0);
+        setQty('');
         setRemark('');
         setProductionLossId(0);
     }
 
     const handleSave = async () => {
+        if (qty === '' || qty <= 0) {
+            Swal.fire({ title: 'Invalid quantity', text: 'Quantity must be greater than 0.', icon: 'warning' });
+            return;
+        }
+
         const url = Config.apiUrl + '/production-loss';
 
         try {
             const payload = {
-                createdAt: createdAt.toISOString(),
+                productionDate: createdAt.toISOString(),
                 qty: qty,
                 remark: remark,
                 production: {
@@ -144,9 +150,10 @@ export default function ProductionLoss() {
 
     const handleEdit = (productionLoss: ProductionLossInterface) => {
         setShowModal(true);
-        setCreatedAt(new Date(productionLoss.createdAt));
-        setQty(productionLoss.qty);
-        setRemark(productionLoss.remark);
+        const parsed = new Date(productionLoss.productionDate);
+        setCreatedAt(isNaN(parsed.getTime()) ? new Date() : parsed);
+        setQty(productionLoss.qty ?? 0);
+        setRemark(productionLoss.remark ?? '');
         setProductionLossId(productionLoss.id);
     }
     return (
@@ -173,18 +180,23 @@ export default function ProductionLoss() {
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <th>Loss Date</th>
                                 <th style={{ textAlign: 'right' }}>Quantity</th>
                                 <th>Remark</th>
+                                <th>Recorded</th>
                                 <th className="w-[120px]"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {productionLoss.map((pl) => (
                                 <tr key={pl.id}>
-                                    <td>{new Date(pl.createdAt).toLocaleDateString()}</td>
+                                    <td>{new Date(pl.productionDate).toLocaleDateString()}</td>
                                     <td className="text-right">{pl.qty}</td>
                                     <td>{pl.remark}</td>
+                                    {/* Server-stamped, so a back-dated entry still shows when it was keyed in */}
+                                    <td className="text-sm opacity-70">
+                                        {pl.recordedAt ? new Date(pl.recordedAt).toLocaleString() : '-'}
+                                    </td>
                                     <td className="flex gap-2 justify-center">
                                         <button onClick={() => handleEdit(pl)}
                                             className="table-edit-btn table-action-btn">
@@ -208,16 +220,21 @@ export default function ProductionLoss() {
                     <div className="flex flex-col gap-3">
                         <div>
                             <label>Date</label>
+                            {/* Same rules as the production log: editable so a shift can be
+                                keyed in later, capped at today so scrap cannot be recorded
+                                for a day that has not happened yet. Clearing the field yields
+                                "", and new Date("") throws on toISOString(). */}
                             <input type="date"
-                                value={createdAt.toISOString().split('T')[0]}
-                                onChange={(e) => setCreatedAt(new Date(e.target.value))}
+                                max={new Date().toISOString().split('T')[0]}
+                                value={isNaN(createdAt.getTime()) ? '' : createdAt.toISOString().split('T')[0]}
+                                onChange={(e) => setCreatedAt(e.target.value ? new Date(e.target.value) : new Date())}
                             />
                         </div>
                         <div>
                             <label>Quantity</label>
                             <input type="text"
                                 value={qty}
-                                onChange={(e) => setQty(Number(e.target.value))} />
+                                onChange={(e) => setQty(e.target.value === '' ? '' : Number(e.target.value))} />
                         </div>
                         <div>
                             <label>Remark</label>

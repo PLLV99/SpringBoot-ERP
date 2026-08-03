@@ -6,8 +6,10 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { MaterialInterface } from "@/interface/MaterialInterface";
 import { Config } from "@/Config";
+import { useRouter } from "next/navigation";
 
 export default function MaterialPage() {
+    const router = useRouter();
     // State for all materials
     const [materials, setMaterials] = useState<MaterialInterface[]>([])
     // State for modal visibility
@@ -19,7 +21,9 @@ export default function MaterialPage() {
     // State for unit name
     const [unitName, setUnitName] = useState<string>('');
     // State for quantity
-    const [qty, setQty] = useState<number>(0);
+    // '' means the box is empty; a state stuck at 0 cannot be cleared, so typing 1
+    // on top of it reads as "01"
+    const [qty, setQty] = useState<number | ''>('');
 
     // Fetch all materials from backend
     const fetchData = useCallback(async () => {
@@ -46,6 +50,15 @@ export default function MaterialPage() {
 
     // Save (add or edit) material
     const handleSave = async () => {
+        if (!name.trim()) {
+            Swal.fire({ title: 'Name required', text: 'Enter a material name.', icon: 'warning' });
+            return;
+        }
+        if (qty === '' || qty < 0) {
+            Swal.fire({ title: 'Invalid quantity', text: 'Enter a quantity of 0 or more.', icon: 'warning' });
+            return;
+        }
+
         try {
             let url = Config.apiUrl + '/materials'
             const payload = {
@@ -131,6 +144,16 @@ export default function MaterialPage() {
     // Render UI
     return (
         <div>
+            {/* Materials is reached from Production and has no sidebar entry, so it
+                needs the same Back button the log and loss screens already use.
+                A <button> and not a <Link>: .button-back is display:flex, which keeps a
+                button at its content width but stretches an anchor across the row */}
+            <div className="mb-4">
+                <button className="button-back" onClick={() => router.push('/erp/production')}>
+                    <i className="fa fa-arrow-left mr-2"></i>
+                    Back to Production
+                </button>
+            </div>
             {/* Page title */}
             <h1 className="text-2xl font-bold mb-5">Materials</h1>
             {/* Add material button */}
@@ -138,7 +161,7 @@ export default function MaterialPage() {
                 setShowModal(true);
                 setName('');
                 setUnitName('');
-                setQty(0);
+                setQty('');
                 setId(0);
             }} className="button-add">
                 <i className="fa fa-plus mr-2"></i>
@@ -187,15 +210,17 @@ export default function MaterialPage() {
                             <input type="text" value={name} className="input-field"
                                 onChange={(e) => setName(e.target.value)} />
                         </div>
+                        {/* Quantity before Unit, matching the Formula screen: the pair
+                            reads as one measurement ("500 kg"), so the number comes first */}
+                        <div>
+                            <label>Quantity</label>
+                            <input type="text" value={qty} className="input-field"
+                                onChange={(e) => setQty(e.target.value === '' ? '' : Number(e.target.value))} />
+                        </div>
                         <div>
                             <label>Unit</label>
                             <input type="text" value={unitName} className="input-field"
                                 onChange={(e) => setUnitName(e.target.value)} />
-                        </div>
-                        <div>
-                            <label>Quantity</label>
-                            <input type="text" value={qty} className="input-field"
-                                onChange={(e) => setQty(Number(e.target.value || 0))} />
                         </div>
                         <div className="flex justify-end gap-2">
                             {/* Cancel button */}

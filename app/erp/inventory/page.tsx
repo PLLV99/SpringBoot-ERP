@@ -32,7 +32,8 @@ export default function InventoryPage() {
     const [totalProductionLoss, setTotalProductionLoss] = useState<number>(0);
     const [totalProductionFree, setTotalProductionFree] = useState<number>(0);
     const [remarkImport, setRemarkImport] = useState<string>('');
-    const [qtyImport, setQtyImport] = useState<number>(0);
+    // '' means the box is empty; a state stuck at 0 cannot be cleared
+    const [qtyImport, setQtyImport] = useState<number | ''>('');
 
     // Modal states
     const [showModal, setShowModal] = useState(false);
@@ -43,7 +44,7 @@ export default function InventoryPage() {
     // Transfer modal states
     const [fromStoreId, setFromStoreId] = useState<number>(0);
     const [toStoreId, setToStoreId] = useState<number>(0);
-    const [qtyTransfer, setQtyTransfer] = useState<number>(0);
+    const [qtyTransfer, setQtyTransfer] = useState<number | ''>('');
     const [remarkTransfer, setRemarkTransfer] = useState<string>('');
     const [transferCreatedAt, setTransferCreatedAt] = useState<Date>(new Date());
     const [fromStoreName, setFromStoreName] = useState<string>('');
@@ -213,6 +214,11 @@ export default function InventoryPage() {
     const handleImport = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
+        if (qtyImport === '' || qtyImport <= 0) {
+            Swal.fire({ title: 'Invalid quantity', text: 'Enter how many units to bring into the warehouse.', icon: 'warning' });
+            return;
+        }
+
         try {
             const data = {
                 production: {
@@ -302,6 +308,26 @@ export default function InventoryPage() {
 
     const handleTransferStock = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // The selects start empty, so 0 means "nothing chosen". Without this the request
+        // goes out referencing store/product id 0, which the database rejects as a
+        // foreign key violation - an error that says nothing about what the user did wrong.
+        if (!toStoreId) {
+            Swal.fire({ title: 'Select a destination', text: 'Choose which warehouse to transfer to.', icon: 'warning' });
+            return;
+        }
+        if (toStoreId === fromStoreId) {
+            Swal.fire({ title: 'Same warehouse', text: 'Choose a different warehouse to transfer to.', icon: 'warning' });
+            return;
+        }
+        if (!productionTransfer) {
+            Swal.fire({ title: 'Select a product', text: 'Choose which product to transfer.', icon: 'warning' });
+            return;
+        }
+        if (qtyTransfer === '' || qtyTransfer <= 0) {
+            Swal.fire({ title: 'Invalid quantity', text: 'Enter how many units to transfer.', icon: 'warning' });
+            return;
+        }
 
         try {
             const payload = {
@@ -405,16 +431,23 @@ export default function InventoryPage() {
         setShowModalTransfer(true);
         setFromStoreName(fromStoreName);
         setFromStoreId(fromStoreId);
+        // Clear the rest so a previous transfer never leaks into this one
+        setToStoreId(0);
+        setProductionTransfer(0);
+        setQtyTransfer('');
+        setRemarkTransfer('');
+        setTransferCreatedAt(new Date());
     }
 
     const closeModalTransfer = () => {
         setShowModalTransfer(false);
         setFromStoreId(0);
         setToStoreId(0);
-        setQtyTransfer(0);
+        setQtyTransfer('');
         setRemarkTransfer('');
         setTransferCreatedAt(new Date());
-        setProductionTransfer(productions[0].id);
+        // 0, not productions[0].id: reading [0] throws when no product exists yet
+        setProductionTransfer(0);
     }
 
     const openModalHistoryTransfer = () => {
@@ -564,7 +597,7 @@ export default function InventoryPage() {
                                     <label>Import Quantity</label>
                                     <input type="number" className="input-field"
                                         value={qtyImport}
-                                        onChange={(e) => setQtyImport(Number(e.target.value))} />
+                                        onChange={(e) => setQtyImport(e.target.value === '' ? '' : Number(e.target.value))} />
                                 </div>
 
                                 <div>
@@ -633,8 +666,13 @@ export default function InventoryPage() {
                             </div>
                             <div>
                                 <label>To</label>
-                                <select onChange={(e) => setToStoreId(Number(e.target.value))}>
-                                    {stores.map((store) => (
+                                {/* Controlled, with a placeholder: an uncontrolled select shows the
+                                    first option while the state is still 0, so pressing Save sent
+                                    a reference to a store that does not exist. The source
+                                    warehouse is filtered out - transferring to itself is a no-op. */}
+                                <select value={toStoreId} onChange={(e) => setToStoreId(Number(e.target.value))}>
+                                    <option value={0}>-- Select a warehouse --</option>
+                                    {stores.filter((store) => store.id !== fromStoreId).map((store) => (
                                         <option key={store.id} value={store.id}>
                                             {store.name}
                                         </option>
@@ -643,7 +681,8 @@ export default function InventoryPage() {
                             </div>
                             <div>
                                 <label>Product</label>
-                                <select onChange={(e) => setProductionTransfer(Number(e.target.value))}>
+                                <select value={productionTransfer} onChange={(e) => setProductionTransfer(Number(e.target.value))}>
+                                    <option value={0}>-- Select a product --</option>
                                     {productions.map((production) => (
                                         <option key={production.id} value={production.id}>
                                             {production.name}
@@ -653,15 +692,21 @@ export default function InventoryPage() {
                             </div>
                             <div>
                                 <label>Quantity</label>
-                                <input type="number" onChange={(e) => setQtyTransfer(Number(e.target.value))} />
+                                <input type="number" value={qtyTransfer}
+                                    onChange={(e) => setQtyTransfer(e.target.value === '' ? '' : Number(e.target.value))} />
                             </div>
                             <div>
                                 <label>Remark</label>
-                                <input type="text" onChange={(e) => setRemarkTransfer(e.target.value)} />
+                                <input type="text" value={remarkTransfer}
+                                    onChange={(e) => setRemarkTransfer(e.target.value)} />
                             </div>
                             <div>
                                 <label>Transfer Date</label>
-                                <input type="date" onChange={(e) => setTransferCreatedAt(new Date(e.target.value))} />
+                                {/* Controlled and capped at today, same as the production screens */}
+                                <input type="date"
+                                    max={new Date().toISOString().split('T')[0]}
+                                    value={isNaN(transferCreatedAt.getTime()) ? '' : transferCreatedAt.toISOString().split('T')[0]}
+                                    onChange={(e) => setTransferCreatedAt(e.target.value ? new Date(e.target.value) : new Date())} />
                             </div>
                             <div className="flex justify-end gap-2 mt-3">
                                 <button type="button" className="modal-btn modal-btn-cancel"

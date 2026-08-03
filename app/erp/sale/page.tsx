@@ -11,12 +11,14 @@ import Modal from "../components/Modal";
 export default function SalePage() {
     const [total, setTotal] = useState<number>(0);
     const [quantity, setQuantity] = useState<number>(0);
-    const [discount, setDiscount] = useState<number>(0);
+    // '' means the box is empty. Keeping these at 0 makes them impossible to clear:
+    // typing 1 on top of the 0 reads as "01".
+    const [discount, setDiscount] = useState<number | ''>('');
     const [showModalProductions, setShowModalProductions] = useState<boolean>(false);
     const [productions, setProductions] = useState<ProductionInterface[]>([]);
     const [saleTemps, setSaleTemps] = useState<SaleTempInterface[]>([]);
     const [showModalEndSale, setShowModalEndSale] = useState<boolean>(false);
-    const [inputMoney, setInputMoney] = useState<number>(0);
+    const [inputMoney, setInputMoney] = useState<number | ''>('');
     const [returnMoney, setReturnMoney] = useState<number>(0);
 
     const fetchProductions = useCallback(async () => {
@@ -176,9 +178,10 @@ export default function SalePage() {
             if (confirmButton.isConfirmed) {
                 const url = Config.apiUrl + '/SaleTemp/endSale';
                 const headers = getHeaders();
+                // An empty box means zero to the API; total is recomputed server-side
                 const payload = {
-                    inputMoney: inputMoney,
-                    discount: discount,
+                    inputMoney: Number(inputMoney || 0),
+                    discount: Number(discount || 0),
                     total: total
                 }
                 const response = await axios.post(url, payload, { headers });
@@ -215,22 +218,33 @@ export default function SalePage() {
     // --- Input Handles
     const handleChangeInputMoney = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.trim();
-        const inputMoneyValue = Number(value);
 
-        if (!isNaN(inputMoneyValue)) {
-            setInputMoney(inputMoneyValue);
-            setReturnMoney(inputMoneyValue - (total - discount));
+        if (value === '') {
+            setInputMoney('');
+            setReturnMoney(0 - (total - Number(discount || 0)));
+            return;
         }
 
+        const inputMoneyValue = Number(value);
+        if (!isNaN(inputMoneyValue)) {
+            setInputMoney(inputMoneyValue);
+            setReturnMoney(inputMoneyValue - (total - Number(discount || 0)));
+        }
     }
 
     const handleChangeDiscount = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.trim();
-        const discountValue = Number(value);
 
+        if (value === '') {
+            setDiscount('');
+            setReturnMoney(Number(inputMoney || 0) - total);
+            return;
+        }
+
+        const discountValue = Number(value);
         if (!isNaN(discountValue)) {
             setDiscount(discountValue);
-            setReturnMoney(inputMoney - (total - discountValue));
+            setReturnMoney(Number(inputMoney || 0) - (total - discountValue));
         }
     }
 
@@ -289,7 +303,7 @@ export default function SalePage() {
                                 <tr key={saleTemp.id}>
                                     <td>{saleTemp.production.id}</td>
                                     <td>{saleTemp.production.name}</td>
-                                    <td>{saleTemp.price.toLocaleString('en-US')}</td>
+                                    <td>{(saleTemp.price ?? 0).toLocaleString('en-US')}</td>
                                     <td>
                                         <div className="flex gap-2">
                                             <button className="table-edit-btn table-action-btn" onClick={() => handleDownQty(saleTemp.id)}>
@@ -301,7 +315,7 @@ export default function SalePage() {
                                             </button>
                                         </div>
                                     </td>
-                                    <td>{(saleTemp.price * saleTemp.qty).toLocaleString()}</td>
+                                    <td>{((saleTemp.price ?? 0) * saleTemp.qty).toLocaleString()}</td>
                                     <td>
                                         <div className="flex gap-2">
                                             <button className="table-delete-btn table-action-btn" onClick={() => handleDeleteSaleTemp(saleTemp.id)} >
@@ -347,7 +361,8 @@ export default function SalePage() {
                                             </td>
                                             <td>{production.id}</td>
                                             <td>{production.name}</td>
-                                            <td>{production.price.toLocaleString('en-US')}</td>
+                                            {/* price is null until it is set on the Accounting page */}
+                                            <td>{(production.price ?? 0).toLocaleString('en-US')}</td>
                                         </tr>
                                     ))}
                                 </tbody>

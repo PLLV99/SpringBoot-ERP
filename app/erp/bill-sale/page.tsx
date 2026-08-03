@@ -98,7 +98,7 @@ export default function BillSalePage() {
 
     return (
         <div>
-            <h1 text-2xl font-bold mb-4>Sales Invoices</h1>
+            <h1 className="text-2xl font-bold mb-4">Sales Invoices</h1>
             <div className="table-container">
                 <table className="table">
                     <thead>
@@ -128,7 +128,7 @@ export default function BillSalePage() {
                                 </td>
                                 <td>{item.id}</td>
                                 <td>{(new Date(item.createdAt)).toLocaleDateString()}</td>
-                                <td>{item.total.toLocaleString()}</td>
+                                <td>{(item.total ?? 0).toLocaleString()}</td>
                                 <td>
                                     <button onClick={() => fetchDataBillSaleDetail(item.id)}
                                         className="bg-blue-600 px-4 py-2 rounded-md text-white mr-1">
@@ -173,8 +173,8 @@ export default function BillSalePage() {
                                             <td>{item.production.id}</td>
                                             <td>{item.production.name}</td>
                                             <td className="text-right">{item.quantity}</td>
-                                            <td className="text-right">{item.price.toLocaleString()}</td>
-                                            <td className="text-right">{(item.quantity * item.price).toLocaleString()}</td>
+                                            <td className="text-right">{(item.price ?? 0).toLocaleString()}</td>
+                                            <td className="text-right">{(item.quantity * (item.price ?? 0)).toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>

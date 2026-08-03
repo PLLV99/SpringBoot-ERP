@@ -11,7 +11,8 @@ import axios from "axios";
 export default function AccountingPage() {
     const [productions, setProductions] = useState<ProductionInterface[]>([]);
     const [id, setId] = useState<number>(0);
-    const [price, setPrice] = useState<number>(0);
+    // '' represents an empty input box; a number is a real price
+    const [price, setPrice] = useState<number | ''>(0);
     const [name, setName] = useState<string>('');
     const [showModal, setShowModal] = useState<boolean>(false)
 
@@ -38,6 +39,17 @@ export default function AccountingPage() {
 
     const handleUpdatePrice = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // An empty or negative price would be saved as-is; the API trusts this value
+        if (price === '' || price < 0) {
+            Swal.fire({
+                title: 'Invalid price',
+                text: 'Enter a price of 0 or more before saving.',
+                icon: 'warning'
+            });
+            return;
+        }
+
         try {
             const payload = { price };
             const url = `${Config.apiUrl}/productions/updatePrice/${id}`;
@@ -57,17 +69,24 @@ export default function AccountingPage() {
         }
     }
 
+    // Clearing the box gives '', and parseFloat('') is NaN - which React rejects as an
+    // input value. Keep the empty string in state instead, so the field can be cleared
+    // and retyped; handleUpdatePrice is what decides an empty box is not submittable.
     const handleChangePrice = (value: string) => {
-        if (value !== null) {
-            setPrice(parseFloat(value));
+        if (value === '') {
+            setPrice('');
+            return;
         }
+        const parsed = parseFloat(value);
+        setPrice(Number.isNaN(parsed) ? '' : parsed);
     }
 
     const openModal = (id: number) => {
         const production = productions.find(item => item.id === id);
         if (production) {
             setId(id);
-            setPrice(production.price);
+            // price is null until it has been set for the first time
+            setPrice(production.price ?? '');
             setName(production.name);
             setShowModal(true);
         }
@@ -121,7 +140,7 @@ export default function AccountingPage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Selling Price</label>
                             <input type="number"
-                                value={price ?? 0}
+                                value={price}
                                 onChange={(e) => handleChangePrice(e.target.value)}
                                 className="input-field w-full"
                             />

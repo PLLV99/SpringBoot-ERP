@@ -5,6 +5,9 @@ export interface ProductionLogInterface {
   production: ProductionInterface;
   qty: number;
   unit: string;
-  createdAt: Date;
+  /** When the batch was produced - chosen by the operator, may be back-dated */
+  productionDate: string;
+  /** When the row was keyed in - set by the server, read-only */
+  recordedAt: string;
   remark: string;
 }

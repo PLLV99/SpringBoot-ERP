@@ -23,8 +23,10 @@ export default function EditProfile() {
             })
 
             if (response.status === 200) {
-                setUsername(response.data.username);
-                setEmail(response.data.email);
+                // Fall back to '': email is nullable in the database, and a null
+                // value turns these controlled inputs into uncontrolled ones
+                setUsername(response.data.username ?? '');
+                setEmail(response.data.email ?? '');
             }
 
         } catch (error) {
@@ -55,7 +57,7 @@ export default function EditProfile() {
             }
 
             const token = localStorage.getItem(Config.tokenKey);
-            const url = `${Config.apiUrl}/api/users/edit-profile`;
+            const url = `${Config.apiUrl}/users/edit-profile`;
             const payload = {
                 username,
                 email,

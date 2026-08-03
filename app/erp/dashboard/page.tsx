@@ -19,10 +19,12 @@ export default function DashboardPage() {
 
             if (response.status === 200) {
                 const data = response.data;
-                setSumQty(data.sumQty);
-                setSumIncome(data.sumIncome);
-                setTotalProduct(data.totalProduct);
-                setSumLoss(data.sumLoss)
+                // Fall back to 0: the API returns null for aggregates with no rows yet,
+                // and null.toLocaleString() crashes the page
+                setSumQty(data.sumQty ?? 0);
+                setSumIncome(data.sumIncome ?? 0);
+                setTotalProduct(data.totalProduct ?? 0);
+                setSumLoss(data.sumLoss ?? 0)
             }
         } catch (error) {
             Swal.fire({
