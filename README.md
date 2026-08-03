@@ -116,10 +116,16 @@ npm run dev -- -p 3001
 
 ### API routing
 
-In development `next.config.ts` forwards `/api/*` to `http://localhost:8080`
-(override with the `BACKEND_URL` environment variable). In production on Vercel the rewrite
-in `vercel.json` routes `/api/*` to the deployed backend instead. Because the browser only
-ever calls a same-origin `/api` path, there is no CORS preflight in either environment.
+Both environments forward `/api/*` to the backend, so the browser only ever calls a
+same-origin `/api` path and there is no CORS preflight in either one.
+
+| | Handled by | Destination |
+|---|---|---|
+| Development | `next.config.ts` | `BACKEND_URL`, falling back to `http://localhost:8080` |
+| Production (Vercel) | `vercel.json` | `BACKEND_URL` — **no fallback, set it in the Vercel project settings** |
+
+`BACKEND_URL` is the only environment variable this project reads; see `.env.example`.
+The API base path and the token key are constants in `app/Config.ts`, not settings.
 
 ### Build
 

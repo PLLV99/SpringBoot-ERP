@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://54.226.27.193/api/:path*"
+      "destination": "$BACKEND_URL/api/:path*"
     }
   ]
 }
