@@ -5,22 +5,25 @@
 @tailwind utilities;
 
 /* ---------- Login Styles ---------- */
-/* กล่อง login หลัก จัดกึ่งกลางแนวตั้ง-นอน พื้นหลังไล่สี */
-/* Main login container: center content, gradient background */
+/* กล่อง login หลัก จัดกึ่งกลางแนวตั้ง-นอน พื้นหลังสีเรียบ */
+/* Main login container: centred content, flat dark background */
+/* Flat slate rather than a multi-stop gradient: an ERP is a tool people stare at all
+   day, so the chrome stays quiet and the data carries the colour. One accent hue
+   (indigo) marks the primary action; green and red keep their usual meanings. */
 .login-container {
-  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-black p-4;
+  @apply min-h-screen flex items-center justify-center bg-slate-950 p-4;
 }
 
-/* กล่อง login ด้านใน มีเงา ขอบมน พื้นหลังโปร่งใส */
-/* Login box: rounded, blurred, semi-transparent, shadow */
+/* กล่อง login ด้านใน มีเงา ขอบมน */
+/* Login box: rounded, solid slate, border, shadow */
 .login-box {
-  @apply bg-gradient-to-t from-black/60 to-black/40 backdrop-blur-lg rounded-2xl p-10 w-full max-w-[420px] shadow-2xl border-indigo-500/20;
+  @apply bg-slate-900 border border-slate-800 rounded-2xl p-10 w-full max-w-[420px] shadow-2xl;
 }
 
-/* หัวข้อใหญ่ login ตัวหนา ไล่สี */
-/* Login title: bold, gradient text */
+/* หัวข้อใหญ่ login ตัวหนา สีขาว */
+/* Login title: bold, plain white */
 .login-title {
-  @apply bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent text-4xl font-bold text-center mb-2;
+  @apply text-white text-4xl font-bold text-center mb-2;
 }
 
 /* หัวข้อย่อย login สีเทา */
@@ -54,22 +57,24 @@
 }
 
 /* ปุ่ม login หลัก */
-/* Main login button: gradient, rounded, hover/active effects */
+/* Main login button: solid accent colour, rounded, hover/active states */
 .login-button {
-  @apply bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-md p-2 text-center font-semibold cursor-pointer transition duration-200 ease-in-out hover:bg-gradient-to-l hover:from-indigo-500/80 hover:to-purple-500/80 active:from-indigo-700/80 active:to-purple-700/80;
+  @apply bg-indigo-600 text-white rounded-md p-2 text-center font-semibold cursor-pointer
+      transition-colors duration-150 hover:bg-indigo-500 active:bg-indigo-700;
 }
 
 /* ปุ่ม Back ทั่วระบบ */
-/* Back button: gray gradient, rounded, subtle shadow, hover effect */
+/* Back button: muted slate, rounded, hover effect */
 .button-back {
-  @apply bg-gradient-to-b from-gray-200 to-gray-400 text-gray-800 rounded-md p-2 text-sm font-medium flex items-center shadow hover:from-gray-300 hover:to-gray-500 transition-colors duration-150;
+  @apply bg-slate-800 text-slate-200 border border-slate-700 rounded-md p-2 text-sm font-medium
+      flex items-center hover:bg-slate-700 transition-colors duration-150;
 }
 
 /* ---------- Sidebar Styles ---------- */
 /* แถบเมนูด้านข้าง */
-/* Sidebar: full height, gradient, shadow */
+/* Sidebar: full height, flat slate, right border */
 .sidebar {
-  @apply h-screen w-72 bg-gradient-to-b from-purple-900 via-blue-600 to-black text-white p-6 shadow-2xl;
+  @apply h-screen w-72 bg-slate-900 border-r border-slate-800 text-white p-6;
 }
 
 /* กล่องรวมเนื้อหาใน sidebar */
@@ -84,10 +89,10 @@
   @apply text-2xl font-bold mb-6 text-center border border-b-2 border-b-gray-400 border-t-0 border-l-0 border-r-0;
 }
 
-/* หัวข้อ sidebar ไล่สี */
-/* Sidebar title gradient text */
+/* หัวข้อ sidebar สีขาว */
+/* Sidebar title: plain white */
 .sidebar-title h1 {
-  @apply text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-t from-purple-300 to-pink-400;
+  @apply text-2xl font-bold mb-6 text-white;
 }
 
 /* ปุ่มแก้ไขโปรไฟล์ใน sidebar */
@@ -111,19 +116,21 @@
 /* ลิงก์เมนู sidebar */
 /* Sidebar nav link: hover effect */
 .sidebar-nav-link {
-  @apply flex items-center gap-2 cursor-pointer hover:bg-white/30 p-2 rounded-lg;
+  @apply flex items-center gap-2 cursor-pointer text-slate-300 hover:bg-slate-800 hover:text-white
+      p-2 rounded-lg transition-colors;
 }
 
 /* ลิงก์เมนูที่ active */
 /* Sidebar active nav link */
+/* Active item gets the accent colour - the one place the eye should land first */
 .sidebar-nav-link-active {
-  @apply flex items-center gap-2 cursor-pointer bg-white/30 p-2 rounded-lg transition-colors;
+  @apply flex items-center gap-2 cursor-pointer bg-indigo-600 text-white p-2 rounded-lg transition-colors;
 }
 
 /* ปุ่มทั่วไป */
-/* General button: gradient, rounded */
+/* General button: solid accent colour, rounded */
 .button {
-  @apply bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg py-2 px-4;
+  @apply bg-indigo-600 text-white rounded-lg py-2 px-4 hover:bg-indigo-500 transition-colors;
 }
 
 /* ---------- Table Styles ---------- */
@@ -146,9 +153,9 @@
 }
 
 /* หัวตาราง */
-/* Table header: gradient background */
+/* Table header: flat slate background */
 .table thead {
-  @apply bg-gradient-to-r from-indigo-600 to-purple-600;
+  @apply bg-slate-800;
 }
 
 /* หัวคอลัมน์ */
@@ -176,17 +183,15 @@
 }
 
 /* ปุ่มแก้ไขในตาราง */
-/* Table edit button: blue gradient, hover effect */
+/* Table edit button: solid blue, hover effect */
 .table-edit-btn {
-  @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md
-    hover:from-blue-600 hover:to-blue-700;
+  @apply bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors;
 }
 
 /* ปุ่มลบในตาราง */
-/* Table delete button: red gradient, hover effect */
+/* Table delete button: solid red, hover effect */
 .table-delete-btn {
-  @apply bg-gradient-to-r from-red-500 to-red-600 text-white rounded-md
-    hover:from-red-600 hover:to-red-700;
+  @apply bg-red-600 text-white rounded-md hover:bg-red-500 transition-colors;
 }
 
 /* ---------- Modal Styles ---------- */
@@ -259,17 +264,18 @@
 }
 
 /* ปุ่มยกเลิกใน modal */
-/* Modal cancel button: gray gradient, border, shadow */
+/* Modal cancel button: neutral slate, border */
+/* Cancel is a neutral action, not a destructive one - red here trains people to
+   ignore red, which is the colour that should stop them at Delete */
 .modal-btn-cancel {
-  @apply bg-gradient-to-b from-red-700 to-red-900 text-gray-300 hover:from-red-800 hover:to-red-950 
-    border border-red-600 shadow-lg shadow-red-500/20 transition-all duration-200 ease-in-out;
+  @apply bg-slate-700 text-slate-200 border border-slate-600 hover:bg-slate-600
+      transition-colors duration-150;
 }
 
 /* ปุ่ม submit ใน modal */
-/* Modal submit button: emerald gradient, shadow */
+/* Modal submit button: solid emerald */
 .modal-btn-submit {
-  @apply bg-gradient-to-b from-emerald-600 to-emerald-800 text-gray-100 hover:from-emerald-700 
-      hover:to-emerald-900 shadow-lg shadow-emerald-500/20 transition-all duration-200 ease-in-out;
+  @apply bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-150;
 }
 
 input.input-money {
@@ -282,4 +288,52 @@ input.input-discount {
 
 input.return-money {
   @apply text-right text-4xl font-bold border border-green-400 bg-green-400/20 text-green-500;
+}
+
+/* ---------- Form controls ---------- */
+/* ช่องกรอกข้อมูลมาตรฐาน ใช้ทุกฟอร์มและทุก modal */
+/* Standard field used by every form and modal. It was referenced everywhere but never
+   defined, so inputs fell back to the browser default: a white box inheriting the
+   layout's white text, i.e. white on white. */
+.input-field {
+  @apply w-full bg-slate-900/60 text-white rounded-md px-3 py-2 border border-indigo-500/30
+      placeholder:text-gray-400 focus:outline-none focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20;
+}
+
+/* ช่องที่แสดงค่าอย่างเดียว แก้ไม่ได้ เช่น ยอดที่ระบบคำนวณให้ */
+/* Read-only field: system-calculated values the user must see but cannot edit */
+.input-field:disabled,
+.input-disabled {
+  @apply bg-slate-800/60 text-gray-400 cursor-not-allowed;
+}
+
+/* ปุ่มรอง สีฟ้า ใช้กับลิงก์ไปหน้าอื่น เช่น Materials */
+/* Secondary action button, e.g. the link from Production to Materials */
+.button-info {
+  @apply inline-flex items-center bg-sky-600/80 text-white px-4 py-2 rounded-md text-base font-medium
+      hover:bg-sky-600 transition-colors duration-150;
+}
+
+/* ป้ายสถานะในตาราง เช่น Paid / Cancelled */
+/* Status pills used in the invoice table */
+.badge-success {
+  @apply inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold;
+}
+
+.badge-danger {
+  @apply inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold;
+}
+
+/* ให้ utility class จัดตำแหน่งชนะ .table th ที่ตั้ง text-left ไว้ */
+/* `.table th` sets text-left, and being element+class it outranks a bare `.text-right`
+   utility - so a right-aligned column header silently stayed left. These put the
+   utility back in charge without touching every table. */
+/* Plain CSS, not @apply: applying `text-right` inside a `.text-right` selector is a
+   circular reference and Tailwind refuses to build it. */
+.table th.text-right {
+  text-align: right;
+}
+
+.table th.text-center {
+  text-align: center;
 }
